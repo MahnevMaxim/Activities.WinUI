@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Activities.WinUI/Activities.WinUI.csproj" />
+  <Project Path="WinUIExplorer/WinUIExplorer.csproj" />
+</Solution>
