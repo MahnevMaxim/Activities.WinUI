@@ -1,4 +1,5 @@
 <Solution>
-  <Project Path="Activities.WinUI/Activities.WinUI.csproj" />
-  <Project Path="WinUIExplorer/WinUIExplorer.csproj" />
+  <Project Path="../../../../../../source/repos/Activities.WinUI/Activities.WinUI.Tests/Activities.WinUI.Tests.csproj" />
+  <Project Path="../../../../../../source/repos/Activities.WinUI/Activities.WinUI/Activities.WinUI.csproj" Id="ceaf728c-75c5-48d9-922d-24b5d30d4bdb" />
+  <Project Path="../../../../../../source/repos/Activities.WinUI/WinUIExplorer/WinUIExplorer.csproj" Id="3e44eb7c-650f-417f-8cd5-96dbf82e908a" />
 </Solution>

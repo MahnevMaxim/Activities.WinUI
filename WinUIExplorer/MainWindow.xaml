@@ -5,8 +5,74 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WinUIExplorer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="Редактор селекторов (WinUIExplorer)" Height="640" Width="980"
+        WindowStartupLocation="CenterScreen">
+    <DockPanel>
+        <ToolBarTray DockPanel.Dock="Top">
+            <ToolBar>
+                <Button Content="Захват элемента" Click="OnCapture" />
+                <Separator />
+                <Button Content="Проверить" Click="OnValidate" />
+                <Button Content="Копировать" Click="OnCopy" />
+                <Button x:Name="ApplyButton" Content="Применить" Click="OnApply" Visibility="Collapsed" />
+            </ToolBar>
+        </ToolBarTray>
+
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusText" Text="Готово" />
+            </StatusBarItem>
+        </StatusBar>
+
+        <Grid DockPanel.Dock="Top" Margin="8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="Селектор:" FontWeight="SemiBold" />
+            <TextBox x:Name="SelectorTextBox" Grid.Row="1" Height="64" AcceptsReturn="True"
+                     TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                     FontFamily="Consolas" TextChanged="OnSelectorTextChanged" />
+            <TextBlock x:Name="ValidationText" Grid.Row="2" Margin="0,2,0,0" Text=" " />
+        </Grid>
+
+        <Grid Margin="8,0,8,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" MinWidth="240" />
+                <ColumnDefinition Width="3*" MinWidth="320" />
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Header="Дерево элементов" Padding="4">
+                <TreeView x:Name="ElementTree" SelectedItemChanged="OnTreeSelectionChanged"
+                          VirtualizingStackPanel.IsVirtualizing="True" />
+            </GroupBox>
+
+            <GroupBox Grid.Column="1" Header="Свойства элемента" Padding="4" Margin="8,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock x:Name="ElementInfoText" TextWrapping="Wrap" Margin="0,0,0,6" />
+                    <DataGrid x:Name="PropertyList" Grid.Row="1" AutoGenerateColumns="False"
+                              CanUserAddRows="False" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Вкл" Width="44">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsIncluded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Свойство" Binding="{Binding DisplayName}" Width="130" IsReadOnly="True" />
+                            <DataGridTextColumn Header="Значение" Binding="{Binding Value}" Width="*" IsReadOnly="True" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </GroupBox>
+        </Grid>
+    </DockPanel>
 </Window>
+

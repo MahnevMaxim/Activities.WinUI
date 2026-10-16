@@ -43,9 +43,34 @@
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="UIAutomationClient" />
+    <Reference Include="UIAutomationTypes" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Activities.Presentation" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Selector.cs" />
+    <Compile Include="SelectorSerializer.cs" />
+    <Compile Include="SelectorParser.cs" />
+    <Compile Include="ControlTypeResolver.cs" />
+    <Compile Include="SelectorConditions.cs" />
+    <Compile Include="SelectorResolver.cs" />
+    <Compile Include="SelectorBuilder.cs" />
+    <Compile Include="UIElement.cs" />
+    <Compile Include="Activities\SelectorArgument.cs" />
+    <Compile Include="Activities\FindElement.cs" />
+    <Compile Include="Activities\ElementExists.cs" />
+    <Compile Include="Activities\WaitForElement.cs" />
+    <Compile Include="Activities\ClickElement.cs" />
+    <Compile Include="Activities\SetText.cs" />
+    <Compile Include="Activities\GetText.cs" />
+    <Compile Include="Activities\GetElements.cs" />
+    <Compile Include="Activities\HighlightElement.cs" />
+    <Compile Include="Design\SelectorActivityDesigner.cs" />
+    <Compile Include="Design\ActivitiesMetadata.cs" />
   </ItemGroup>
   <ItemGroup>
     <XamlAppDef Include="Activity1.xaml">
