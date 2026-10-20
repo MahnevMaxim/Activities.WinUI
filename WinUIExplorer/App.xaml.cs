@@ -13,5 +13,12 @@ namespace WinUIExplorer
     /// </summary>
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            // DPI awareness обязателен: без него WindowFromPoint/координаты захвата
+            // не совпадают с физическими координатами экрана (см. WinAppDriverUIRecorder).
+            NativeMethods.SetProcessDPIAware();
+            base.OnStartup(e);
+        }
     }
 }

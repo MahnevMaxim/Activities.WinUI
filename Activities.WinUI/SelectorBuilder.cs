@@ -24,20 +24,17 @@ namespace Activities.WinUI
             if (element == null) throw new ArgumentNullException(nameof(element));
             options = options ?? new SelectorBuildOptions();
 
-            var chain = new List<AutomationElement>();
-            AutomationElement current = element;
-            while (current != null)
-            {
-                chain.Add(current);
-                if (current.Current.ControlType == ControlType.Window) break;
-                current = TreeWalker.ControlViewWalker.GetParent(current);
-            }
-            chain.Reverse();
+            var chain = BuildChain(element);
 
             var selector = new Selector();
-            foreach (var el in chain)
+            for (int i = 0; i < chain.Count; i++)
             {
-                bool isWindow = el.Current.ControlType == ControlType.Window;
+                var el = chain[i];
+
+                // Первый узел цепочки — верхнеуровневое окно (HWND). Для панели задач
+                // Shell_TrayWnd имеет ControlType.Pane, а не Window, но его всё равно нужно
+                // сериализовать как <wnd>, чтобы селектор корректно резолвился от RootElement.
+                bool isWindow = i == 0 || el.Current.ControlType == ControlType.Window;
                 var item = new SelectorItem(isWindow ? "wnd" : "ctrl");
 
                 if (isWindow)
@@ -62,6 +59,27 @@ namespace Activities.WinUI
 
             return selector;
         }
+
+        private static List<AutomationElement> BuildChain(AutomationElement element)
+        {
+            var chain = new List<AutomationElement>();
+            AutomationElement current = element;
+
+            // Не включаем корень рабочего стола: SelectorResolver ищет от RootElement
+            // через TreeScope.Descendants, а корень не является своим потомком.
+            while (current != null && !IsDesktopRoot(current))
+            {
+                chain.Add(current);
+                if (current.Current.ControlType == ControlType.Window) break;
+                current = TreeWalker.ControlViewWalker.GetParent(current);
+            }
+
+            chain.Reverse();
+            return chain;
+        }
+
+        private static bool IsDesktopRoot(AutomationElement element)
+            => Automation.Compare(element, AutomationElement.RootElement);
 
         public static string GetProcessName(AutomationElement element)
         {

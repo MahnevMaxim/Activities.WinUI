@@ -1,9 +1,12 @@
 using System;
 using System.Activities;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Activities.WinUI.Design;
 
 namespace Activities.WinUI.Activities
 {
+    [Designer(typeof(SelectorActivityDesigner))]
     public sealed class HighlightElement : CodeActivity
     {
         [RequiredArgument]

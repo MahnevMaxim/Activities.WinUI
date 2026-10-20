@@ -59,6 +59,15 @@
     <Compile Include="SelectorConditions.cs" />
     <Compile Include="SelectorResolver.cs" />
     <Compile Include="SelectorBuilder.cs" />
+    <Compile Include="AutomationElementLocator.cs" />
+    <Compile Include="AutomationElementHitTest.cs" />
+    <Compile Include="UiaPathNode.cs" />
+    <Compile Include="UiaNodePathParser.cs" />
+    <Compile Include="SelectorBuilderFromNodes.cs" />
+    <Compile Include="IUiPathProvider.cs" />
+    <Compile Include="NativeUiPathProvider.cs" />
+    <Compile Include="UiElementCapturer.cs" />
+    <Compile Include="UiCaptureController.cs" />
     <Compile Include="UIElement.cs" />
     <Compile Include="Activities\SelectorArgument.cs" />
     <Compile Include="Activities\FindElement.cs" />
@@ -70,13 +79,6 @@
     <Compile Include="Activities\GetElements.cs" />
     <Compile Include="Activities\HighlightElement.cs" />
     <Compile Include="Design\SelectorActivityDesigner.cs" />
-    <Compile Include="Design\ActivitiesMetadata.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <XamlAppDef Include="Activity1.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </XamlAppDef>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

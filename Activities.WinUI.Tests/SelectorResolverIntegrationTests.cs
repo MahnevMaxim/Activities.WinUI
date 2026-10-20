@@ -121,6 +121,24 @@ namespace Activities.WinUI.Tests
             Assert.Equal(WindowAutomationId, result.AutomationId);
         }
 
+        [Fact]
+        public void Build_Button_StartsWithWindowNode_NotDesktopRoot()
+        {
+            var button = AutomationElement.RootElement.FindFirst(TreeScope.Descendants,
+                new PropertyCondition(AutomationElement.AutomationIdProperty, ButtonAutomationId));
+            var window = FindWindow();
+            Assert.NotNull(button);
+            Assert.NotNull(window);
+
+            var selector = SelectorBuilder.Build(button);
+
+            Assert.True(selector.Items.Count >= 2);
+            Assert.Equal("wnd", selector.Items[0].Tag);
+            Assert.Equal(window.Current.ClassName, selector.Items[0].GetProperty("cls"));
+            Assert.Equal("button", selector.Items[selector.Items.Count - 1].GetProperty("role"));
+            Assert.Equal(ButtonAutomationId, selector.Items[selector.Items.Count - 1].GetProperty("automationid"));
+        }
+
         private static AutomationElement FindWindow()
         {
             return AutomationElement.RootElement.FindFirst(TreeScope.Children,

@@ -49,6 +49,10 @@ namespace Activities.WinUI
                 ["headeritem"] = ControlType.HeaderItem,
                 ["splitbutton"] = ControlType.SplitButton,
                 ["titlebar"] = ControlType.TitleBar,
+                ["calendar"] = ControlType.Calendar,
+                ["menubar"] = ControlType.MenuBar,
+                ["thumb"] = ControlType.Thumb,
+                ["tooltip"] = ControlType.ToolTip,
             };
 
         public static bool TryResolve(string role, out ControlType controlType)
@@ -94,6 +98,10 @@ namespace Activities.WinUI
             if (controlType == ControlType.TreeItem) return "treeitem";
             if (controlType == ControlType.Hyperlink) return "hyperlink";
             if (controlType == ControlType.Table) return "table";
+            if (controlType == ControlType.Calendar) return "calendar";
+            if (controlType == ControlType.MenuBar) return "menubar";
+            if (controlType == ControlType.Thumb) return "thumb";
+            if (controlType == ControlType.ToolTip) return "tooltip";
 
             return controlType.ProgrammaticName;
         }

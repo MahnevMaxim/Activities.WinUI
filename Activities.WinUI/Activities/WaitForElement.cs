@@ -1,10 +1,13 @@
 using System;
 using System.Activities;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
+using Activities.WinUI.Design;
 
 namespace Activities.WinUI.Activities
 {
+    [Designer(typeof(SelectorActivityDesigner))]
     public sealed class WaitForElement : CodeActivity<UIElement>
     {
         [RequiredArgument]

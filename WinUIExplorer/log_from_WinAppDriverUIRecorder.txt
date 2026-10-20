@@ -1,0 +1,111 @@
+2026-10-20 08:19:08.0316|INFO|Logger|------------------------------------------------------------------------------------------------------------------------
+2026-10-20 08:19:08.0537|INFO|Logger|Лог открыт: C:\Users\Maxxx\source\repos\Activities.WinUI\WinUIExplorer\log_from_WinAppDriverUIRecorder.txt
+2026-10-20 08:19:08.0887|INFO|Environment|--- Окружение ---
+2026-10-20 08:19:08.0887|INFO|Environment|    | Время старта: 2026-10-20 08:19:07.923
+2026-10-20 08:19:08.0887|INFO|Environment|    | ОС: Microsoft Windows NT 6.2.9200.0 (64-bit OS)
+2026-10-20 08:19:08.0887|INFO|Environment|    | Процесс: WinAppDriverUIRecorder PID=21316 (64-bit)
+2026-10-20 08:19:08.0907|INFO|Environment|    | CLR: 4.0.30319.42000
+2026-10-20 08:19:08.0907|INFO|Environment|    | Exe: C:\Users\Maxxx\source\repos\WinAppDriver\Tools\UIRecorder\x64\Debug\WinAppDriverUIRecorder.exe
+2026-10-20 08:19:08.0907|INFO|Environment|    | BaseDirectory: C:\Users\Maxxx\source\repos\WinAppDriver\Tools\UIRecorder\x64\Debug\
+2026-10-20 08:19:08.0907|INFO|Environment|    | CurrentDirectory: C:\Users\Maxxx\source\repos\WinAppDriver\Tools\UIRecorder\x64\Debug
+2026-10-20 08:19:08.0907|INFO|Environment|    | Пользователь: DESKTOP-2VTFA3S\Maxxx
+2026-10-20 08:19:08.0907|INFO|Environment|    | Culture: ru-RU, UICulture: ru-RU
+2026-10-20 08:19:08.0907|INFO|Environment|    | UI thread id: 1
+2026-10-20 08:19:08.0907|INFO|Environment|    | Primary screen: W=1920 H=1080
+2026-10-20 08:19:08.0907|INFO|Environment|    | UIXPathLib.dll: C:\Users\Maxxx\source\repos\WinAppDriver\Tools\UIRecorder\x64\Debug\UIXPathLib.dll -> Size=231424 LastWrite=2026-10-20 08:18:56 FileVersion= ProductVersion=
+2026-10-20 08:19:08.0907|INFO|Environment|    | 
+2026-10-20 08:19:08.0907|INFO|Environment|--- конец: Окружение ---
+2026-10-20 08:19:08.0907|INFO|Logger|------------------------------------------------------------------------------------------------------------------------
+2026-10-20 08:19:08.0907|INFO|App|OnStartup: старт приложения
+2026-10-20 08:19:08.0907|INFO|App|SetProcessDPIAware() = True (важно для координат: без DPI awareness точка WindowFromPoint может не совпадать с физическими координатами)
+2026-10-20 08:19:08.5862|INFO|App|Вызов нативной NativeMethods.InitUiTreeWalk()
+2026-10-20 08:19:08.6012|INFO|App|InitUiTreeWalk() завершён
+2026-10-20 08:20:10.6472|INFO|Logger|------------------------------------------------------------------------------------------------------------------------
+2026-10-20 08:20:10.6472|INFO|Section|=== Запись начата: MouseKeyboardEventHandler.Init ===
+2026-10-20 08:20:10.6472|INFO|Recorder|Параметры записи: интервал опроса=125 мс, порог перемещения курсора=15 пикс, порог двойного клика=750 мс, размер буфера=16384
+2026-10-20 08:20:10.6472|INFO|Recorder|MouseKeyboardHook.StartHook() вернул True
+2026-10-20 08:20:10.6748|INFO|Recorder|Поток записи стартовал (thread id=23)
+2026-10-20 08:20:10.7750|TRACE|Recorder|Итерация: bStartWalk=True, hookPaused=False, курсор=(186,639), точка последнего захвата=(0,0), dist=825 (порог 15)
+2026-10-20 08:20:10.8350|INFO|Capture|--- ОКНО ПОД КУРСОРОМ ---
+2026-10-20 08:20:10.8350|INFO|Capture|    | Точка: x=186 y=639
+2026-10-20 08:20:10.8350|INFO|Capture|    | WindowFromPoint: HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:10.8350|INFO|Capture|    | GetAncestor(GA_ROOT): HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:10.8350|INFO|Capture|    | Foreground window: HWND=0x2E0ECC Class="HwndWrapper[WinAppDriverUIRecorder.exe;UIThread;a94a98c3-a29b-4608-8f31-12d9242355bc]" Text="WAD UIRecorder" PID=21316 (WinAppDriverUIRecorder) Visible=True Rect=(156,156,486,656) DPI=96
+2026-10-20 08:20:10.8350|INFO|Capture|    | Цепочка родителей (WindowFromPoint -> корень):
+2026-10-20 08:20:10.8350|INFO|Capture|    |     [0] HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:10.8350|INFO|Capture|    | 
+2026-10-20 08:20:10.8350|INFO|Capture|--- конец: ОКНО ПОД КУРСОРОМ ---
+2026-10-20 08:20:10.8350|DEBUG|Capture|Вызов нативной UIXPathLib.GetUiXPath: left=186, top=639, nMaxCount=16384
+2026-10-20 08:20:10.8430|INFO|Capture|GetUiXPath завершён: код возврата=0, время=62 мс, длина результата=0 символов
+2026-10-20 08:20:10.8430|WARN|Capture|Сырой результат GetUiXPath (узлы от листа к корню): результат GetUiXPath пустой (0 символов)
+2026-10-20 08:20:10.8430|WARN|Capture|Пустой результат GetUiXPath для точки (186,639) — элемент не захвачен
+2026-10-20 08:20:12.1158|TRACE|Recorder|Итерация: bStartWalk=True, hookPaused=False, курсор=(515,1043), точка последнего захвата=(186,639), dist=733 (порог 15)
+2026-10-20 08:20:12.1639|INFO|Capture|--- ОКНО ПОД КУРСОРОМ ---
+2026-10-20 08:20:12.1639|INFO|Capture|    | Точка: x=515 y=1043
+2026-10-20 08:20:12.1639|INFO|Capture|    | WindowFromPoint: HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:12.1639|INFO|Capture|    | GetAncestor(GA_ROOT): HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:12.1639|INFO|Capture|    | Foreground window: HWND=0x2E0ECC Class="HwndWrapper[WinAppDriverUIRecorder.exe;UIThread;a94a98c3-a29b-4608-8f31-12d9242355bc]" Text="WAD UIRecorder" PID=21316 (WinAppDriverUIRecorder) Visible=True Rect=(156,156,486,656) DPI=96
+2026-10-20 08:20:12.1639|INFO|Capture|    | Цепочка родителей (WindowFromPoint -> корень):
+2026-10-20 08:20:12.1639|INFO|Capture|    |     [0] HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:12.1639|INFO|Capture|    | 
+2026-10-20 08:20:12.1639|INFO|Capture|--- конец: ОКНО ПОД КУРСОРОМ ---
+2026-10-20 08:20:12.1639|DEBUG|Capture|Вызов нативной UIXPathLib.GetUiXPath: left=515, top=1043, nMaxCount=16384
+2026-10-20 08:20:12.3360|INFO|Capture|GetUiXPath завершён: код возврата=815, время=218 мс, длина результата=815 символов
+2026-10-20 08:20:12.3360|INFO|Capture|Сырой результат GetUiXPath (узлы от листа к корню): длина=815 символов, узлов=4
+2026-10-20 08:20:12.3360|INFO|Capture|  node[0] лист (элемент под курсором): /Button[LocalizedControlType="кнопка"][ClassName=""][Name="Google Chrome —1 запущенное окно"][AutomationId="Chrome"][x=490][y=1040][width=47][height=40][lx=25][ly=3][position()=2][RuntimeId="42.65818.4.-2147483647.65818.-4.3"]
+2026-10-20 08:20:12.3360|INFO|Capture|  node[1] родитель #1: /ToolBar[LocalizedControlType="панель инструментов"][ClassName="MSTaskListWClass"][Name="Работающие приложения"][AutomationId=""][x=440][y=1040][width=1253][height=40][lx=75][ly=3][position()=4][RuntimeId="42.65818"]
+2026-10-20 08:20:12.3360|INFO|Capture|  node[2] родитель #2: /Pane[LocalizedControlType="панель"][ClassName="Shell_TrayWnd"][Name="Панель задач"][AutomationId=""][x=0][y=1040][width=1920][height=40][lx=515][ly=3][position()=][RuntimeId="42.65704"]
+2026-10-20 08:20:12.3360|INFO|Capture|  node[3] родитель #3: /Pane[LocalizedControlType="панель"][ClassName="#32769"][Name="Рабочий стол 1"][AutomationId=""][x=0][y=0][width=1920][height=1080][lx=515][ly=1043][position()=][RuntimeId="42.65552"]
+2026-10-20 08:20:12.3360|TRACE|Capture|hash нового пути=-259176398, предыдущий hash=0 — изменился
+2026-10-20 08:20:12.3360|INFO|Capture|Новый путь принят: отправляю в XmlNodePathRecorder.HandleUiEvent(Inspect)
+2026-10-20 08:20:12.7740|TRACE|Recorder|Итерация: bStartWalk=True, hookPaused=False, курсор=(555,1060), точка последнего захвата=(515,1043), dist=57 (порог 15)
+2026-10-20 08:20:12.8311|INFO|Capture|--- ОКНО ПОД КУРСОРОМ ---
+2026-10-20 08:20:12.8311|INFO|Capture|    | Точка: x=555 y=1060
+2026-10-20 08:20:12.8311|INFO|Capture|    | WindowFromPoint: HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:12.8311|INFO|Capture|    | GetAncestor(GA_ROOT): HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:12.8311|INFO|Capture|    | Foreground window: HWND=0x2E0ECC Class="HwndWrapper[WinAppDriverUIRecorder.exe;UIThread;a94a98c3-a29b-4608-8f31-12d9242355bc]" Text="WAD UIRecorder" PID=21316 (WinAppDriverUIRecorder) Visible=True Rect=(156,156,486,656) DPI=96
+2026-10-20 08:20:12.8311|INFO|Capture|    | Цепочка родителей (WindowFromPoint -> корень):
+2026-10-20 08:20:12.8311|INFO|Capture|    |     [0] HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:12.8311|INFO|Capture|    | 
+2026-10-20 08:20:12.8311|INFO|Capture|--- конец: ОКНО ПОД КУРСОРОМ ---
+2026-10-20 08:20:12.8311|DEBUG|Capture|Вызов нативной UIXPathLib.GetUiXPath: left=555, top=1060, nMaxCount=16384
+2026-10-20 08:20:13.0009|INFO|Capture|GetUiXPath завершён: код возврата=820, время=234 мс, длина результата=820 символов
+2026-10-20 08:20:13.0009|INFO|Capture|Сырой результат GetUiXPath (узлы от листа к корню): длина=820 символов, узлов=4
+2026-10-20 08:20:13.0009|INFO|Capture|  node[0] лист (элемент под курсором): /Button[LocalizedControlType="кнопка"][ClassName=""][Name="Visual Studio 2022"][AutomationId="VisualStudio.0fadb2c1"][x=537][y=1040][width=47][height=40][lx=18][ly=20][position()=3][RuntimeId="42.65818.4.-2147483647.65818.-4.4"]
+2026-10-20 08:20:13.0009|INFO|Capture|  node[1] родитель #1: /ToolBar[LocalizedControlType="панель инструментов"][ClassName="MSTaskListWClass"][Name="Работающие приложения"][AutomationId=""][x=440][y=1040][width=1253][height=40][lx=115][ly=20][position()=4][RuntimeId="42.65818"]
+2026-10-20 08:20:13.0009|INFO|Capture|  node[2] родитель #2: /Pane[LocalizedControlType="панель"][ClassName="Shell_TrayWnd"][Name="Панель задач"][AutomationId=""][x=0][y=1040][width=1920][height=40][lx=555][ly=20][position()=][RuntimeId="42.65704"]
+2026-10-20 08:20:13.0009|INFO|Capture|  node[3] родитель #3: /Pane[LocalizedControlType="панель"][ClassName="#32769"][Name="Рабочий стол 1"][AutomationId=""][x=0][y=0][width=1920][height=1080][lx=555][ly=1060][position()=][RuntimeId="42.65552"]
+2026-10-20 08:20:13.0009|TRACE|Capture|hash нового пути=-1474958919, предыдущий hash=-259176398 — изменился
+2026-10-20 08:20:13.0009|INFO|Capture|Новый путь принят: отправляю в XmlNodePathRecorder.HandleUiEvent(Inspect)
+2026-10-20 08:20:13.6852|DEBUG|Input|ЛКМ нажата: точка (555,1060), текущее состояние=LeftMouseUp
+2026-10-20 08:20:13.7820|DEBUG|Input|ЛКМ отпущена: точка (555,1060), нажатие было в (555,1060), захваченный путь есть
+2026-10-20 08:20:13.7820|DEBUG|Input|Смещение ЛКМ dist=0 (порог клика 15), состояние=LeftMouseDown, мс с прошлого клика=283987750
+2026-10-20 08:20:13.7820|INFO|Input|ЛКМ: добавляю задачу LeftClick для захваченного элемента
+2026-10-20 08:20:13.8120|TRACE|Recorder|Итерация: bStartWalk=True, hookPaused=False, курсор=(555,1060), точка последнего захвата=(555,1060), dist=0 (порог 15)
+2026-10-20 08:20:16.8583|TRACE|Recorder|Итерация: bStartWalk=True, hookPaused=False, курсор=(1443,200), точка последнего захвата=(555,1060), dist=1748 (порог 15)
+2026-10-20 08:20:16.9624|INFO|Capture|--- ОКНО ПОД КУРСОРОМ ---
+2026-10-20 08:20:16.9624|INFO|Capture|    | Точка: x=1443 y=200
+2026-10-20 08:20:16.9624|INFO|Capture|    | WindowFromPoint: HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:16.9624|INFO|Capture|    | GetAncestor(GA_ROOT): HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:16.9624|INFO|Capture|    | Foreground window: HWND=0x330C52 Class="HwndWrapper[DefaultDomain;;cc6b952c-164e-4e75-bbb1-e76adbe67e5f]" Text="Microsoft Visual Studio" PID=29500 (devenv) Visible=True Rect=(448,180,1472,860) DPI=96
+2026-10-20 08:20:16.9624|INFO|Capture|    | Цепочка родителей (WindowFromPoint -> корень):
+2026-10-20 08:20:16.9624|INFO|Capture|    |     [0] HWND=0x31002 Class="HwndWrapper[DefaultDomain;;dd8d42b2-551a-421b-a625-8cb7755de9ce]" Text="WinAppDriverUIRecorder (Running) - MainWindow.xaml - Microsoft Visual Studio" PID=19084 (devenv) Visible=True Rect=(-8,-8,1928,1048) DPI=96
+2026-10-20 08:20:16.9624|INFO|Capture|    | 
+2026-10-20 08:20:16.9624|INFO|Capture|--- конец: ОКНО ПОД КУРСОРОМ ---
+2026-10-20 08:20:16.9624|DEBUG|Capture|Вызов нативной UIXPathLib.GetUiXPath: left=1443, top=200, nMaxCount=16384
+2026-10-20 08:20:17.1336|DEBUG|Input|ЛКМ нажата: точка (1443,200), текущее состояние=LeftMouseUp
+2026-10-20 08:20:17.2447|DEBUG|Input|ЛКМ отпущена: точка (1443,200), нажатие было в (1443,200), захваченный путь ОТСУТСТВУЕТ
+2026-10-20 08:20:17.2447|DEBUG|Input|Смещение ЛКМ dist=0 (порог клика 15), состояние=LeftMouseDown, мс с прошлого клика=3453
+2026-10-20 08:20:17.2447|WARN|Input|ЛКМ: захваченного элемента нет (s_strXmlNodes пуст) — клик не будет добавлен в сценарий
+2026-10-20 08:20:19.0212|DEBUG|Input|ЛКМ нажата: точка (464,171), текущее состояние=LeftMouseUp
+2026-10-20 08:20:19.1494|DEBUG|Input|ЛКМ отпущена: точка (464,171), нажатие было в (464,171), захваченный путь ОТСУТСТВУЕТ
+2026-10-20 08:20:19.1494|DEBUG|Input|Смещение ЛКМ dist=0 (порог клика 15), состояние=LeftMouseDown, мс с прошлого клика=1891
+2026-10-20 08:20:19.1494|WARN|Input|ЛКМ: захваченного элемента нет (s_strXmlNodes пуст) — клик не будет добавлен в сценарий
+2026-10-20 08:20:19.1664|INFO|Logger|------------------------------------------------------------------------------------------------------------------------
+2026-10-20 08:20:19.1664|INFO|Section|=== Запись остановлена: MouseKeyboardEventHandler.UnInit ===
+2026-10-20 08:20:20.1597|INFO|Recorder|Ожидание завершения потока записи: Join(1000)=False — поток НЕ завершился за 1000 мс
+2026-10-20 08:20:20.1957|INFO|Logger|------------------------------------------------------------------------------------------------------------------------
+2026-10-20 08:20:20.1957|INFO|Section|=== OnExit: завершение работы ===
+2026-10-20 08:20:20.1957|INFO|App|NativeMethods.UnInitUiTreeWalk() выполнен
+2026-10-20 08:20:20.1957|INFO|App|Логирование завершено, закрываю файл лога
+2026-10-20 08:20:20.1957|INFO|Capture|GetUiXPath завершён: код возврата=820, время=3328 мс, длина результата=820 символов

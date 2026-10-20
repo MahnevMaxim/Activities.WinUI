@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Activities.WinUI;
@@ -23,23 +27,63 @@ namespace WinUIExplorer
         private string _inputFile;
         private string _outputFile;
 
-        private AutomationElement _selectedElement;
+        private readonly NativeUiPathProvider _uiPathProvider = new NativeUiPathProvider();
+        private readonly UiCaptureController _captureController;
+        private CapturedElement _capturedElement;
+        private string _capturedProcessName;
+        private Point _lastCapturePoint;
+        private bool _hasLastCapturePoint;
+        private Point _pendingCapturePoint;
+
         private readonly ObservableCollection<PropertyRow> _properties = new ObservableCollection<PropertyRow>();
 
-        private Window _overlay;
-        private Canvas _overlayCanvas;
-        private Border _highlightBorder;
         private bool _capturing;
         private bool _updating;
+
+        private IntPtr _mouseHook;
+        private IntPtr _keyboardHook;
+        private NativeMethods.LowLevelMouseProc _mouseProc;
+        private NativeMethods.LowLevelKeyboardProc _keyboardProc;
+        private DateTime _lastHighlightQuery;
+
+        private Window _highlightWindow;
+        private Rect _lastHighlightBounds;
+
+        private sealed class ValidationOutcome
+        {
+            public bool Success { get; set; }
+            public string Description { get; set; }
+            public string Error { get; set; }
+            public Rect Bounds { get; set; }
+        }
 
         public MainWindow()
         {
             InitializeComponent();
+            _captureController = new UiCaptureController(_uiPathProvider, a => { Dispatcher.BeginInvoke(a); });
+            _captureController.HoverCaptured += OnHoverCaptured;
+            _captureController.HoverLost += OnHoverLost;
+            _captureController.ElementCaptured += OnElementCaptured;
+            try { _uiPathProvider.Init(); }
+            catch (Exception ex) { Logger.Error("Не удалось инициализировать UIXPathLib", ex); }
             ParseArgs(Environment.GetCommandLineArgs().Skip(1).ToArray());
             PropertyList.ItemsSource = _properties;
 
+            Logger.Info("=== Сессия WinUIExplorer началась ===");
+            if (!string.IsNullOrEmpty(_inputFile))
+                Logger.Info("Входной файл селектора: " + _inputFile);
+            if (!string.IsNullOrEmpty(_outputFile))
+                Logger.Info("Выходной файл селектора: " + _outputFile);
+
             if (!string.IsNullOrEmpty(_inputFile) && File.Exists(_inputFile))
                 SelectorTextBox.Text = File.ReadAllText(_inputFile).Trim();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            try { _captureController.EndSession(); } catch { }
+            try { _uiPathProvider.Shutdown(); } catch { }
+            base.OnClosed(e);
         }
 
         #region Аргументы командной строки
@@ -68,131 +112,269 @@ namespace WinUIExplorer
 
         private void OnCapture(object sender, RoutedEventArgs e)
         {
-            EnsureOverlay();
             _capturing = true;
-            _highlightBorder.Visibility = Visibility.Visible;
-            _overlay.MouseMove += OnOverlayMouseMove;
-            _overlay.MouseLeftButtonDown += OnOverlayMouseDown;
-            _overlay.KeyDown += OnOverlayKeyDown;
-
+            _captureController.BeginSession();
             Hide();
-            _overlay.Show();
-            _overlay.Activate();
-            _overlay.Focus();
+            InstallHooks();
         }
 
-        private void OnOverlayMouseMove(object sender, MouseEventArgs e)
+        private IntPtr OnMouseHook(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            AutomationElement element = ElementFromCursor();
-            if (element != null)
-                SetHighlightRect(element.Current.BoundingRectangle);
+            if (nCode >= 0)
+            {
+                int msg = wParam.ToInt32();
+                if (msg == NativeMethods.WM_MOUSEMOVE)
+                {
+                    UpdateHighlightAtCursor();
+                }
+                else if (msg == NativeMethods.WM_LBUTTONDOWN)
+                {
+                    if (NativeMethods.GetCursorPos(out var pt))
+                    {
+                        _pendingCapturePoint = new Point(pt.X, pt.Y);
+                        _captureController.RequestElementCapture(pt.X, pt.Y);
+                    }
+                    return new IntPtr(1);
+                }
+                else if (msg == NativeMethods.WM_RBUTTONDOWN)
+                {
+                    StopCapture();
+                    return new IntPtr(1);
+                }
+            }
+            return NativeMethods.CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }
 
-        private void OnOverlayMouseDown(object sender, MouseButtonEventArgs e)
+        private IntPtr OnKeyboardHook(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            AutomationElement element = ElementFromCursor();
+            if (nCode >= 0 && wParam.ToInt32() == NativeMethods.WM_KEYDOWN)
+            {
+                var info = (NativeMethods.KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(NativeMethods.KBDLLHOOKSTRUCT));
+                if (info.vkCode == NativeMethods.VK_ESCAPE)
+                {
+                    StopCapture();
+                    return new IntPtr(1);
+                }
+            }
+            return NativeMethods.CallNextHookEx(_keyboardHook, nCode, wParam, lParam);
+        }
+
+        private void OnHoverCaptured(CapturedElement captured)
+        {
+            if (!_capturing) return;
+            if (captured != null && !captured.Bounds.IsEmpty)
+                ShowHighlight(captured.Bounds);
+            else
+                HideHighlight();
+        }
+
+        private void OnHoverLost()
+        {
+            if (_capturing)
+                HideHighlight();
+        }
+
+        private void OnElementCaptured(CapturedElement captured)
+        {
+            if (!_capturing) return;
+
+            string processName = GetProcessNameAtPoint((int)_pendingCapturePoint.X, (int)_pendingCapturePoint.Y);
             StopCapture();
 
-            if (element != null)
-                ShowElement(element, populateTree: true);
+            if (captured != null)
+            {
+                Logger.Info("Захвачен элемент: " + DescribeNode(captured.Leaf));
+                ShowCaptured(captured, processName);
+            }
+            else
+            {
+                Logger.Warn("Захват элемента: элемент под курсором не найден.");
+            }
         }
 
-        private void OnOverlayKeyDown(object sender, KeyEventArgs e)
+        private void InstallHooks()
         {
-            if (e.Key == Key.Escape)
-                StopCapture();
+            IntPtr module = NativeMethods.GetModuleHandle(null);
+            _mouseProc = OnMouseHook;
+            _keyboardProc = OnKeyboardHook;
+            _mouseHook = NativeMethods.SetWindowsHookEx(NativeMethods.WH_MOUSE_LL, _mouseProc, module, 0);
+            _keyboardHook = NativeMethods.SetWindowsHookEx(NativeMethods.WH_KEYBOARD_LL, _keyboardProc, module, 0);
+        }
+
+        private void UninstallHooks()
+        {
+            if (_mouseHook != IntPtr.Zero)
+            {
+                NativeMethods.UnhookWindowsHookEx(_mouseHook);
+                _mouseHook = IntPtr.Zero;
+            }
+            if (_keyboardHook != IntPtr.Zero)
+            {
+                NativeMethods.UnhookWindowsHookEx(_keyboardHook);
+                _keyboardHook = IntPtr.Zero;
+            }
+            _mouseProc = null;
+            _keyboardProc = null;
         }
 
         private void StopCapture()
         {
             if (!_capturing) return;
             _capturing = false;
-            _overlay.MouseMove -= OnOverlayMouseMove;
-            _overlay.MouseLeftButtonDown -= OnOverlayMouseDown;
-            _overlay.KeyDown -= OnOverlayKeyDown;
-            _overlay.Hide();
+
+            _captureController.EndSession();
+            UninstallHooks();
+            HideHighlight();
             Show();
             Activate();
         }
 
-        private AutomationElement ElementFromCursor()
+        private void UpdateHighlightAtCursor()
         {
-            if (!NativeMethods.GetCursorPos(out var pt)) return null;
-            try
-            {
-                return AutomationElement.FromPoint(new Point(pt.X, pt.Y));
-            }
-            catch
-            {
-                return null;
-            }
+            if ((DateTime.UtcNow - _lastHighlightQuery).TotalMilliseconds < 100)
+                return;
+            _lastHighlightQuery = DateTime.UtcNow;
+
+            if (!NativeMethods.GetCursorPos(out var pt))
+                return;
+
+            var point = new Point(pt.X, pt.Y);
+            if (_hasLastCapturePoint
+                && Math.Abs(point.X - _lastCapturePoint.X) < 15
+                && Math.Abs(point.Y - _lastCapturePoint.Y) < 15)
+                return;
+
+            _lastCapturePoint = point;
+            _hasLastCapturePoint = true;
+
+            _captureController.RequestHoverCapture(pt.X, pt.Y);
+        }
+
+        private string GetProcessNameAtPoint(int x, int y)
+        {
+            IntPtr hwnd = NativeMethods.WindowFromPoint(x, y);
+            if (hwnd == IntPtr.Zero)
+                return string.Empty;
+
+            uint pid;
+            NativeMethods.GetWindowThreadProcessId(hwnd, out pid);
+            if (pid == 0)
+                return string.Empty;
+
+            try { return Process.GetProcessById((int)pid).ProcessName; }
+            catch { return string.Empty; }
         }
 
         #endregion
 
-        #region Overlay / подсветка
+        #region Подсветка элемента (рамка по краям, FlaUI-style)
 
-        private void EnsureOverlay()
+        private const double HighlightThickness = 3;
+        private const double HighlightBoundsTolerance = 1;
+
+        // Оранжевая рамка (тот же оттенок, что у UiPath UiExplorer для узла дерева — #F29A35).
+        private static readonly Color HighlightColor = Color.FromRgb(0xF2, 0x9A, 0x35);
+
+        private void ShowHighlight(Rect bounds)
         {
-            if (_overlay != null) return;
+            if (bounds.IsEmpty || bounds.Width <= 0 || bounds.Height <= 0)
+            {
+                HideHighlight();
+                return;
+            }
 
-            _overlay = new Window
+            Rect r = ScreenToDips(bounds);
+
+            // Не перерисовываем, если рамка уже стоит на этом же элементе, — иначе
+            // при движении курсора внутри одного элемента окно подсветки мигало бы.
+            if (_highlightWindow != null && AreBoundsEqual(_lastHighlightBounds, r))
+                return;
+
+            EnsureHighlightWindow();
+
+            _highlightWindow.Left = r.Left;
+            _highlightWindow.Top = r.Top;
+            _highlightWindow.Width = Math.Max(HighlightThickness, r.Width);
+            _highlightWindow.Height = Math.Max(HighlightThickness, r.Height);
+            _lastHighlightBounds = r;
+        }
+
+        private void EnsureHighlightWindow()
+        {
+            if (_highlightWindow != null)
+                return;
+
+            var frame = new Border
+            {
+                Background = Brushes.Transparent,
+                BorderBrush = new SolidColorBrush(HighlightColor),
+                BorderThickness = new Thickness(HighlightThickness)
+            };
+
+            _highlightWindow = new Window
             {
                 WindowStyle = WindowStyle.None,
                 AllowsTransparency = true,
-                Background = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0)),
+                Background = Brushes.Transparent,
+                Content = frame,
                 Topmost = true,
                 ShowInTaskbar = false,
-                ShowActivated = true,
-                Focusable = true,
-                Left = SystemParameters.VirtualScreenLeft,
-                Top = SystemParameters.VirtualScreenTop,
-                Width = SystemParameters.VirtualScreenWidth,
-                Height = SystemParameters.VirtualScreenHeight
+                ShowActivated = false,
+                Focusable = false,
+                ResizeMode = ResizeMode.NoResize,
+                IsHitTestVisible = false
             };
+            _highlightWindow.Show();
 
-            _overlayCanvas = new Canvas();
-            _highlightBorder = new Border
-            {
-                BorderBrush = Brushes.Red,
-                BorderThickness = new Thickness(2),
-                Background = new SolidColorBrush(Color.FromArgb(40, 255, 0, 0)),
-                Visibility = Visibility.Collapsed
-            };
-            _overlayCanvas.Children.Add(_highlightBorder);
-            _overlay.Content = _overlayCanvas;
+            // Click-through: окно не перехватывает мышь, поэтому AutomationElement.FromPoint
+            // под рамкой возвращает реальный элемент (в т.ч. кнопки панели задач).
+            var hwnd = new WindowInteropHelper(_highlightWindow).Handle;
+            int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
+            exStyle |= NativeMethods.WS_EX_TRANSPARENT
+                     | NativeMethods.WS_EX_TOOLWINDOW
+                     | NativeMethods.WS_EX_TOPMOST
+                     | NativeMethods.WS_EX_NOACTIVATE;
+            NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, exStyle);
         }
 
-        private void SetHighlightRect(Rect bounds)
+        private void HideHighlight()
         {
-            if (_highlightBorder == null) return;
-
-            Point topLeft = new Point(bounds.Left, bounds.Top);
-            Point bottomRight = new Point(bounds.Right, bounds.Bottom);
-
-            var source = PresentationSource.FromVisual(_overlay);
-            if (source?.CompositionTarget != null)
+            if (_highlightWindow != null)
             {
-                var matrix = source.CompositionTarget.TransformFromDevice;
-                topLeft = matrix.Transform(topLeft);
-                bottomRight = matrix.Transform(bottomRight);
+                try { _highlightWindow.Close(); } catch { /* ignore */ }
+                _highlightWindow = null;
             }
+            _lastHighlightBounds = Rect.Empty;
+        }
 
-            Canvas.SetLeft(_highlightBorder, topLeft.X - _overlay.Left);
-            Canvas.SetTop(_highlightBorder, topLeft.Y - _overlay.Top);
-            _highlightBorder.Width = Math.Max(0, bottomRight.X - topLeft.X);
-            _highlightBorder.Height = Math.Max(0, bottomRight.Y - topLeft.Y);
-            _highlightBorder.Visibility = Visibility.Visible;
+        private static bool AreBoundsEqual(Rect a, Rect b)
+        {
+            return Math.Abs(a.Left - b.Left) <= HighlightBoundsTolerance
+                && Math.Abs(a.Top - b.Top) <= HighlightBoundsTolerance
+                && Math.Abs(a.Width - b.Width) <= HighlightBoundsTolerance
+                && Math.Abs(a.Height - b.Height) <= HighlightBoundsTolerance;
+        }
+
+        private Rect ScreenToDips(Rect bounds)
+        {
+            var source = PresentationSource.FromVisual(this);
+            var matrix = source?.CompositionTarget?.TransformFromDevice;
+            if (matrix == null) return bounds;
+
+            var topLeft = matrix.Value.Transform(new Point(bounds.Left, bounds.Top));
+            var bottomRight = matrix.Value.Transform(new Point(bounds.Right, bounds.Bottom));
+            return new Rect(topLeft, bottomRight);
         }
 
         private void HighlightElement(AutomationElement element)
+            => HighlightBounds(element.Current.BoundingRectangle);
+
+        private void HighlightBounds(Rect bounds)
         {
-            EnsureOverlay();
-            SetHighlightRect(element.Current.BoundingRectangle);
-            _overlay.Show();
+            ShowHighlight(bounds);
 
             var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.2) };
-            timer.Tick += (s, e) => { timer.Stop(); _overlay.Hide(); };
+            timer.Tick += (s, e) => { timer.Stop(); HideHighlight(); };
             timer.Start();
         }
 
@@ -200,21 +382,28 @@ namespace WinUIExplorer
 
         #region Отображение элемента / свойств
 
-        private void ShowElement(AutomationElement element, bool populateTree)
+        private void ShowCaptured(CapturedElement captured, string processName)
         {
             _updating = true;
             try
             {
-                _selectedElement = element;
-                PopulateProperties(element);
-                SelectorTextBox.Text = SelectorSerializer.Serialize(SelectorBuilder.Build(element));
-                ElementInfoText.Text = Describe(element);
-                if (populateTree) PopulateTree(element);
+                _capturedElement = captured;
+                _capturedProcessName = processName;
+                PopulatePropertiesFromNode(captured.Leaf);
+                SelectorTextBox.Text = SelectorSerializer.Serialize(SelectorBuilderFromNodes.Build(captured.NodesRootToLeaf, processName));
+                ElementInfoText.Text = DescribeNode(captured.Leaf);
+                PopulateTreeFromNodes(captured.NodesRootToLeaf);
             }
             finally
             {
                 _updating = false;
             }
+        }
+
+        private string DescribeNode(UiaPathNode node)
+        {
+            if (node == null) return string.Empty;
+            return $"Тип: {node.Tag}   Имя: \"{node.Name}\"   AutomationId: \"{node.AutomationId}\"   Класс: \"{node.ClassName}\"";
         }
 
         private string Describe(AutomationElement element)
@@ -223,22 +412,25 @@ namespace WinUIExplorer
             return $"Тип: {c.ControlType.ProgrammaticName}   Имя: \"{c.Name}\"   AutomationId: \"{c.AutomationId}\"   Класс: \"{c.ClassName}\"";
         }
 
-        private void PopulateProperties(AutomationElement element)
+        private void PopulatePropertiesFromNode(UiaPathNode node)
         {
             foreach (var row in _properties)
                 row.PropertyChanged -= OnPropertyRowChanged;
             _properties.Clear();
 
-            bool isWindow = element.Current.ControlType == ControlType.Window;
+            if (node == null)
+                return;
 
-            if (!string.IsNullOrEmpty(element.Current.ClassName))
-                AddPropertyRow("cls", "ClassName", element.Current.ClassName);
+            bool isWindow = string.Equals(node.Tag, "Window", StringComparison.OrdinalIgnoreCase);
 
-            if (!string.IsNullOrEmpty(element.Current.Name))
-                AddPropertyRow(isWindow ? "title" : "name", "Name", element.Current.Name);
+            if (!string.IsNullOrEmpty(node.ClassName))
+                AddPropertyRow("cls", "ClassName", node.ClassName);
 
-            if (!string.IsNullOrEmpty(element.Current.AutomationId))
-                AddPropertyRow("automationid", "AutomationId", element.Current.AutomationId);
+            if (!string.IsNullOrEmpty(node.Name))
+                AddPropertyRow(isWindow ? "title" : "name", "Name", node.Name);
+
+            if (!string.IsNullOrEmpty(node.AutomationId))
+                AddPropertyRow("automationid", "AutomationId", node.AutomationId);
         }
 
         private void AddPropertyRow(string attribute, string displayName, string value)
@@ -256,7 +448,7 @@ namespace WinUIExplorer
 
         private void RebuildSelectorFromOptions()
         {
-            if (_selectedElement == null) return;
+            if (_capturedElement == null) return;
 
             var options = new SelectorBuildOptions
             {
@@ -268,7 +460,8 @@ namespace WinUIExplorer
             _updating = true;
             try
             {
-                SelectorTextBox.Text = SelectorSerializer.Serialize(SelectorBuilder.Build(_selectedElement, options));
+                SelectorTextBox.Text = SelectorSerializer.Serialize(
+                    SelectorBuilderFromNodes.Build(_capturedElement.NodesRootToLeaf, _capturedProcessName, options));
             }
             finally
             {
@@ -285,84 +478,42 @@ namespace WinUIExplorer
 
         #region Дерево элементов
 
-        private void PopulateTree(AutomationElement target)
+        private void PopulateTreeFromNodes(IReadOnlyList<UiaPathNode> rootToLeaf)
         {
             ElementTree.Items.Clear();
 
-            var chain = new List<AutomationElement>();
-            AutomationElement current = target;
-            while (current != null)
-            {
-                chain.Add(current);
-                if (current.Current.ControlType == ControlType.Window) break;
-                current = TreeWalker.ControlViewWalker.GetParent(current);
-            }
-            chain.Reverse();
-
-            var nodes = new List<TreeViewItem>();
             TreeViewItem parent = null;
-            foreach (var el in chain)
+            foreach (var node in rootToLeaf)
             {
-                var node = CreateTreeNode(el);
-                nodes.Add(node);
-                if (parent == null) ElementTree.Items.Add(node);
-                else parent.Items.Add(node);
-                parent = node;
+                var item = new TreeViewItem { Header = HeaderFor(node), Tag = node };
+                if (parent == null) ElementTree.Items.Add(item);
+                else parent.Items.Add(item);
+                parent = item;
             }
 
-            foreach (var node in nodes.Take(nodes.Count - 1))
-                node.IsExpanded = true;
-
-            if (nodes.Count > 0)
+            if (parent != null)
             {
-                nodes[nodes.Count - 1].IsSelected = true;
-                nodes[nodes.Count - 1].BringIntoView();
+                parent.IsSelected = true;
+                parent.BringIntoView();
             }
         }
 
-        private TreeViewItem CreateTreeNode(AutomationElement element)
+        private string HeaderFor(UiaPathNode node)
         {
-            var node = new TreeViewItem { Header = HeaderFor(element), Tag = element };
+            string role = ControlTypeResolver.TryResolve(node.Tag, out var controlType)
+                ? ControlTypeResolver.ToRoleName(controlType)
+                : (node.Tag ?? "custom").ToLowerInvariant();
 
-            bool hasChildren = false;
-            try { hasChildren = element.FindFirst(TreeScope.Children, System.Windows.Automation.Condition.TrueCondition) != null; }
-            catch { hasChildren = false; }
-
-            if (hasChildren)
-            {
-                node.Items.Add(new TreeViewItem { Header = "…" });
-                node.Expanded += OnTreeNodeExpanded;
-            }
-
-            return node;
-        }
-
-        private void OnTreeNodeExpanded(object sender, RoutedEventArgs e)
-        {
-            var node = (TreeViewItem)sender;
-            node.Expanded -= OnTreeNodeExpanded;
-            node.Items.Clear();
-
-            var element = (AutomationElement)node.Tag;
-            int count = 0;
-            foreach (AutomationElement child in element.FindAll(TreeScope.Children, System.Windows.Automation.Condition.TrueCondition))
-            {
-                if (count++ >= 30) break;
-                node.Items.Add(CreateTreeNode(child));
-            }
-        }
-
-        private string HeaderFor(AutomationElement element)
-        {
-            string type = ControlTypeResolver.ToRoleName(element.Current.ControlType);
-            string name = element.Current.Name;
-            return string.IsNullOrEmpty(name) ? type : $"{type} \"{name}\"";
+            return string.IsNullOrEmpty(node.Name) ? role : role + " \"" + node.Name + "\"";
         }
 
         private void OnTreeSelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (e.NewValue is TreeViewItem item && item.Tag is AutomationElement element)
-                ShowElement(element, populateTree: false);
+            if (e.NewValue is TreeViewItem item && item.Tag is UiaPathNode node)
+            {
+                ElementInfoText.Text = DescribeNode(node);
+                ShowHighlight(new Rect(node.X, node.Y, node.Width, node.Height));
+            }
         }
 
         #endregion
@@ -387,24 +538,81 @@ namespace WinUIExplorer
 
         private void OnValidate(object sender, RoutedEventArgs e)
         {
+            Selector selector;
             try
             {
-                var selector = SelectorParser.Parse(SelectorTextBox.Text);
-                var element = SelectorResolver.FindFirst(selector);
-                StatusText.Text = "Элемент найден: " + Describe(element);
-                HighlightElement(element);
+                selector = SelectorParser.Parse(SelectorTextBox.Text);
             }
             catch (Exception ex)
             {
+                Logger.Error("Проверка селектора: ошибка парсинга. " + ex.Message);
                 StatusText.Text = "Ошибка: " + ex.Message;
                 MessageBox.Show(ex.Message, "Проверка селектора", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
+
+            string selectorText = SelectorTextBox.Text;
+            Logger.Info("Проверка селектора: " + selectorText);
+
+            ValidateButton.IsEnabled = false;
+            StatusText.Text = "Проверка...";
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    var element = SelectorResolver.FindFirst(selector);
+                    return new ValidationOutcome
+                    {
+                        Success = true,
+                        Description = Describe(element),
+                        Bounds = element.Current.BoundingRectangle
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new ValidationOutcome { Success = false, Error = ex.Message };
+                }
+            }).ContinueWith(t =>
+            {
+                if (Dispatcher.HasShutdownStarted)
+                    return;
+
+                ValidateButton.IsEnabled = true;
+                var outcome = t.Result;
+                if (outcome.Success)
+                {
+                    Logger.Info("Проверка селектора: элемент найден — " + outcome.Description);
+                    StatusText.Text = "Элемент найден: " + outcome.Description;
+                    HighlightBounds(outcome.Bounds);
+                }
+                else
+                {
+                    Logger.Error("Проверка селектора не удалась: " + outcome.Error);
+                    StatusText.Text = "Ошибка: " + outcome.Error;
+                    MessageBox.Show(outcome.Error, "Проверка селектора", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void OnCopy(object sender, RoutedEventArgs e)
         {
             Clipboard.SetText(SelectorTextBox.Text);
             StatusText.Text = "Селектор скопирован в буфер обмена.";
+        }
+
+        private void OnOpenLog(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Logger.Info("Пользователь открыл файл лога.");
+                Process.Start(new ProcessStartInfo(Logger.FilePath) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Не удалось открыть файл лога.", ex);
+                MessageBox.Show("Не удалось открыть файл лога: " + ex.Message, "Лог", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void OnApply(object sender, RoutedEventArgs e)
@@ -414,10 +622,12 @@ namespace WinUIExplorer
             try
             {
                 File.WriteAllText(_outputFile, SelectorTextBox.Text.Trim());
+                Logger.Info("Селектор записан в выходной файл: " + _outputFile);
                 Close();
             }
             catch (Exception ex)
             {
+                Logger.Error("Не удалось записать выходной файл.", ex);
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

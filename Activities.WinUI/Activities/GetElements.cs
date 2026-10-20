@@ -1,9 +1,12 @@
 using System.Activities;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows.Automation;
+using Activities.WinUI.Design;
 
 namespace Activities.WinUI.Activities
 {
+    [Designer(typeof(SelectorActivityDesigner))]
     public sealed class GetElements : CodeActivity<ICollection<UIElement>>
     {
         [RequiredArgument]

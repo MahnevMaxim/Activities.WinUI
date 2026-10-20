@@ -12,9 +12,11 @@
             <ToolBar>
                 <Button Content="Захват элемента" Click="OnCapture" />
                 <Separator />
-                <Button Content="Проверить" Click="OnValidate" />
+                <Button x:Name="ValidateButton" Content="Проверить" Click="OnValidate" />
                 <Button Content="Копировать" Click="OnCopy" />
                 <Button x:Name="ApplyButton" Content="Применить" Click="OnApply" Visibility="Collapsed" />
+                <Separator />
+                <Button Content="Лог" Click="OnOpenLog" />
             </ToolBar>
         </ToolBarTray>
 
